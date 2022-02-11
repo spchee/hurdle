@@ -44,7 +44,10 @@ isValid word = (normalise word) `elem`  guessList
 --
 -- [JUSTIFY]
 parseCommand :: String -> Command
-parseCommand = error "Not implemented"
+parseCommand "give up" = GiveUp
+parseCommand "Letters" = ShowLetters -- 
+parseCommand command = Guess $ normalise command
+
 
 
 --------------------------------------------------------------------------------
@@ -56,7 +59,11 @@ parseCommand = error "Not implemented"
 --
 -- [JUSTIFY]
 exactMatches :: String -> String -> [ExactMatch]
-exactMatches = error "Not implemented"
+exactMatches [] [] = []
+exactMatches (x:xs) (y:ys)
+    | x == y = IsExact x : exactMatches xs ys
+    | otherwise = IsNotExact x : exactMatches xs ys
+exactMatches _ _ = error "Strings are different lengths"
 
 
 --------------------------------------------------------------------------------
@@ -66,7 +73,12 @@ exactMatches = error "Not implemented"
 --
 -- [JUSTIFY]
 removeExacts :: [ExactMatch] -> String -> String
-removeExacts = error "Not implemented"
+removeExacts [] [] = []
+removeExacts (x:xs) (y:ys)
+    | x == IsExact y = removeExacts xs ys
+    | otherwise = y : removeExacts xs ys
+removeExacts _ _ = error "Inputs are different lengths"
+
 
 
 --------------------------------------------------------------------------------
@@ -76,7 +88,9 @@ removeExacts = error "Not implemented"
 -- 
 -- [JUSTIFY]
 getMatches :: [ExactMatch] -> [Char] -> [Match]
-getMatches = error "Not implemented"
+getMatches [] [] = []
+getMatches (x:xs) (y:ys)
+
 
 
 --------------------------------------------------------------------------------

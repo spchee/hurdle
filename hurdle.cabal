@@ -12,6 +12,8 @@ bug-reports:    https://github.com/dixonary/hurdle/issues
 author:         Alex Dixon
 maintainer:     alexander.dixon@warwick.ac.uk
 copyright:      2022 Alex Dixon
+license:        MIT
+license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     assets/allowed-guesses
