@@ -2,7 +2,7 @@
 
 module Hurdle.Words where
 
-import Data.FileEmbed ( embedStringFile )
+import Data.FileEmbed (embedStringFile)
 import Data.List (sort)
 
 {-

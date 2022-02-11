@@ -1,8 +1,11 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant bracket" #-}
 module Hurdle where
 
 import Hurdle.Command
 import Hurdle.Match
-  
+import Data.Char
+import Hurdle.Words
 
 --------------------------------------------------------------------------------
 -- This file is your complete submission for the first coursework of CS141.
@@ -19,7 +22,13 @@ import Hurdle.Match
 --
 -- [JUSTIFY]
 normalise :: String -> String
-normalise = error "Not implemented"
+normalise "" = ""
+normalise (x:xs)
+    |   null (x:xs) = []
+    |   'a' <= x && x <= 'z' = toUpper x : normalise xs
+    |   'A' <= x && x <= 'Z' = x : normalise xs
+    |   otherwise = normalise xs
+
 
 
 --------------------------------------------------------------------------------
@@ -27,8 +36,7 @@ normalise = error "Not implemented"
 --
 -- [JUSTIFY]
 isValid :: String -> Bool
-isValid = error "Not implemented"
-
+isValid word = (normalise word) `elem`  guessList
 
 --------------------------------------------------------------------------------
 -- | 3. Our program runs a little command line. Specific strings should be   
