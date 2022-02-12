@@ -87,9 +87,21 @@ removeExacts _ _ = error "Inputs are different lengths"
 -- characters of the answer.
 -- 
 -- [JUSTIFY]
+removeChar :: Char -> [Char] -> [Char]
+removeChar c (x:xs) = if c == x then xs
+    else x:removeChar c xs
+removeChar _ _ = error "some error"
+
 getMatches :: [ExactMatch] -> [Char] -> [Match]
 getMatches [] [] = []
-getMatches (x:xs) (y:ys)
+getMatches (IsExact x:xs) (y:ys) = Exact : getMatches xs (y:ys)
+getMatches (IsNotExact x:xs) (y:ys)
+    | x `elem` (y:ys) = Partial : getMatches xs (removeChar x (y:ys))
+    | otherwise = None : getMatches xs (y:ys)
+getMatches [] a = []
+getMatches a [] = []
+
+
 
 
 
@@ -99,7 +111,11 @@ getMatches (x:xs) (y:ys)
 --
 -- [JUSTIFY]
 matchingAlgo :: String -> String -> [Match]
-matchingAlgo = error "Not implemented"
+matchingAlgo guess answer = getMatches exacts str
+    where
+        exacts = exactMatches guess answer
+        str = removeExacts exacts answer
+
 
 
 --------------------------------------------------------------------------------
@@ -107,8 +123,21 @@ matchingAlgo = error "Not implemented"
 -- have generated the given match based on the guess that was made.
 --
 -- [JUSTIFY]
+elimnateOne :: String -> [Match] -> String -> Bool
+elimnateOne [] [] [] = True
+elimnateOne (x:xs) (y:ys) (z:zs) = case y of
+    Exact   -> z == x
+    Partial -> x `elem` (z:zs) && eliminateOne xs ys (removeChar x (z:zs))
+    None -> x `notElem` (z:zs) && eliminateOne xs ys zs
+elimnateOne _ _ _ = True
+
+
+
+
+
 eliminate :: String -> [Match] -> [String] -> [String]
-eliminate = error "Not implemented"
+eliminate _ _ [] = []
+eliminate guess exacts (z:zs) =  ([z | elimnateOne guess exacts z]) ++ [ eliminate guess exacts zs]
 
 
 
