@@ -12,11 +12,11 @@ import Control.Applicative (liftA2, liftA3)
 import Control.Monad (replicateM, forM)
 import Data.Bool (bool)
 import Data.Function (on)
-import Data.Maybe (mapMaybe)
+import Data.Maybe
 import Data.Char (isAlpha, isUpper)
 import System.Console.ANSI (clearScreen)
 import System.Random (randomRIO)
-import Data.List ((\\))
+import Data.List ((\\), find)
 import Hurdle
 import Hurdle.Command
 import Hurdle.Match
@@ -194,13 +194,19 @@ testEliminate = testGroup "Q8: eliminate"
       in
         eliminate "BRACE" m ws @?= ["PRICK"]
   , testProperty "Works on random examples"
-    $ property $ forAllShrink (liftA3 (,,)
-        (replicateM 5 $ elements ['A' .. 'Z'])
-        (replicateM 5 $ elements [None, Partial, Exact])
-        (sublistOf guessList)
-      ) genericShrink $ \(a,m,gs) -> let a' = normalise a; e = eliminate a' m gs in 
-          all    ((==m). matchingAlgo a') e
-          && all ((/=m). matchingAlgo a') (gs \\ e)
+    $ property $
+      forAll (elements answerList) $ \a ->
+      forAll (replicateM 5 $ elements [None, Partial, Exact]) $ \m ->
+      forAllShrinkBlind (sublistOf answerList) subterms $ \gs ->
+      let 
+        a' = normalise a 
+        e = eliminate a' m gs 
+        elimOops    = find ((==m) . matchingAlgo a') (gs \\ e)
+        notElimOops = find ((/=m) . matchingAlgo a') e
+      in 
+        counterexample (show (fromJust elimOops) ++ " should not be eliminated as a possible answer, but it was") (isNothing elimOops)
+        .&&. 
+        counterexample (show (fromJust notElimOops) ++ " should be eliminated as a possible answer, but it wasn't") (isNothing notElimOops)
   ]
 
 testEliminateAll :: TestTree

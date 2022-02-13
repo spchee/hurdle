@@ -63,7 +63,7 @@ exactMatches [] [] = []
 exactMatches (x:xs) (y:ys)
     | x == y = IsExact x : exactMatches xs ys
     | otherwise = IsNotExact x : exactMatches xs ys
-exactMatches _ _ = error "Strings are different lengths"
+exactMatches _ _ = []
 
 
 --------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ removeExacts [] [] = []
 removeExacts (x:xs) (y:ys)
     | x == IsExact y = removeExacts xs ys
     | otherwise = y : removeExacts xs ys
-removeExacts _ _ = error "Inputs are different lengths"
+removeExacts _ _ = []
 
 
 
@@ -88,7 +88,8 @@ removeExacts _ _ = error "Inputs are different lengths"
 -- 
 -- [JUSTIFY]
 removeChar :: Char -> [Char] -> [Char]
-removeChar c (x:xs) = if c == x then xs
+removeChar c (x:xs) =
+    if c == x then xs
     else x:removeChar c xs
 removeChar _ _ = error "some error"
 
@@ -123,13 +124,49 @@ matchingAlgo guess answer = getMatches exacts str
 -- have generated the given match based on the guess that was made.
 --
 -- [JUSTIFY]
-elimnateOne :: String -> [Match] -> String -> Bool
-elimnateOne [] [] [] = True
-elimnateOne (x:xs) (y:ys) (z:zs) = case y of
-    Exact   -> z == x
-    Partial -> x `elem` (z:zs) && eliminateOne xs ys (removeChar x (z:zs))
-    None -> x `notElem` (z:zs) && eliminateOne xs ys zs
-elimnateOne _ _ _ = True
+            -- guess -> matching-letters -> possible answer -> is possible answer?
+
+-- eliminateOne :: String -> [Match] -> String -> Bool
+-- eliminateOne guess matches answer = canRemoveExact && canRemovePartial && canRemoveNone
+--     where 
+--         canRemoveExact = checkExacts guess matches answer
+--         canRemovePartial = True 
+--         canRemoveNone = True
+
+-- removeNones :: (String, String) -> Bool
+-- removeNones ((x:xs), answer)
+--     | x `notElem` answer = removeNones (xs, answer)
+--     | otherwise = False 
+-- removeNones (_, _) = True 
+
+
+-- removePartial :: (String, [Match], String) -> (String, String) -> (String, String)
+-- removePartial ((x:xs), (y:ys), (z:zs) ) (x', y') 
+    
+
+-- removeExacts' :: String -> [Match] -> String -> (String, [Match], String) -> (String, [Match], String)
+-- removeExacts' (x:xs) (y:ys) (z:zs) (x', y', z')
+--     | x == z && y == Exact = removeExacts' xs ys zs (x', y', z')
+--     | otherwise = removeExacts' xs ys zs (x:x', y:y',   z:z')
+-- removeExacts' _ _ _ (x', y', z') = (reverse x', reverse y', reverse z')
+
+-- checkExacts :: Eq a => [a] -> [Match] -> [a] -> Bool
+-- checkExacts (x:xs) (Exact:ys) (z:zs)
+--         | x == z = checkExacts xs ys zs
+--         | otherwise = False
+-- checkExacts _ _ _ = True
+
+
+eliminateOne (x:xs) (y:ys) (z:zs) = case y of
+    Exact   -> z == x && eliminateOne xs ys zs
+    Partial -> z /=  x && i /=[]  &&  eliminateOne xs ((removeAtIndex (ys) (head i -1)) ++ [y]) ((removeAtIndex  (zs) (head i -1)) ++ [z])
+    None -> x `notElem` (z:zs) && eliminateOne xs (ys ++ [y]) (zs ++ [z])
+    where
+        i = partialExist x (y:ys) (z:zs)
+        partialExist element matches str = [ i | i <- [1.. (length matches-1)], (str !! i) == element && (matches !! i) /= Exact]
+        removeAtIndex str i = take i str ++ drop (1 + i) str
+eliminateOne _ _ _ = True
+
 
 
 
@@ -137,7 +174,7 @@ elimnateOne _ _ _ = True
 
 eliminate :: String -> [Match] -> [String] -> [String]
 eliminate _ _ [] = []
-eliminate guess exacts (z:zs) =  ([z | elimnateOne guess exacts z]) ++ [ eliminate guess exacts zs]
+eliminate guess exacts (z:zs) =  [z | eliminateOne guess exacts z] ++  eliminate guess exacts zs
 
 
 
