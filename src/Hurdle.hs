@@ -88,9 +88,9 @@ removeExacts _ _ = []
 -- 
 -- [JUSTIFY]
 removeChar :: Char -> [Char] -> [Char]
-removeChar c (x:xs) =
-    if c == x then xs
-    else x:removeChar c xs
+removeChar c (x:xs)
+    | c == x = xs
+    | otherwise =  x:removeChar c xs
 removeChar _ _ = error "some error"
 
 getMatches :: [ExactMatch] -> [Char] -> [Match]
@@ -99,8 +99,7 @@ getMatches (IsExact x:xs) (y:ys) = Exact : getMatches xs (y:ys)
 getMatches (IsNotExact x:xs) (y:ys)
     | x `elem` (y:ys) = Partial : getMatches xs (removeChar x (y:ys))
     | otherwise = None : getMatches xs (y:ys)
-getMatches [] a = []
-getMatches a [] = []
+getMatches _ _ = []
 
 
 
@@ -142,7 +141,7 @@ matchingAlgo guess answer = getMatches exacts str
 
 -- removePartial :: (String, [Match], String) -> (String, String) -> (String, String)
 -- removePartial ((x:xs), (y:ys), (z:zs) ) (x', y') 
-    
+
 
 -- removeExacts' :: String -> [Match] -> String -> (String, [Match], String) -> (String, [Match], String)
 -- removeExacts' (x:xs) (y:ys) (z:zs) (x', y', z')
@@ -157,24 +156,18 @@ matchingAlgo guess answer = getMatches exacts str
 -- checkExacts _ _ _ = True
 
 
-eliminateOne (x:xs) (y:ys) (z:zs) = case y of
-    Exact   -> z == x && eliminateOne xs ys zs
-    Partial -> z /=  x && i /=[]  &&  eliminateOne xs ((removeAtIndex (ys) (head i -1)) ++ [y]) ((removeAtIndex  (zs) (head i -1)) ++ [z])
-    None -> x `notElem` (z:zs) && eliminateOne xs (ys ++ [y]) (zs ++ [z])
-    where
-        i = partialExist x (y:ys) (z:zs)
-        partialExist element matches str = [ i | i <- [1.. (length matches-1)], (str !! i) == element && (matches !! i) /= Exact]
-        removeAtIndex str i = take i str ++ drop (1 + i) str
-eliminateOne _ _ _ = True
 
 
-
-
+eliminateOne :: String ->  [Match] -> String -> Bool
+eliminateOne guess matches answer = matchingAlgo guess answer == matches
 
 
 eliminate :: String -> [Match] -> [String] -> [String]
-eliminate _ _ [] = []
-eliminate guess exacts (z:zs) =  [z | eliminateOne guess exacts z] ++  eliminate guess exacts zs
+eliminate guess matches = filter (eliminateOne guess matches)
+
+
+
+
 
 
 
