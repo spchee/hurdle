@@ -5,8 +5,11 @@ module Hurdle where
 import Hurdle.Command
 import Hurdle.Match
 import Data.Char
-import Hurdle.Words
+import Hurdle.Words ( guessList )
 
+import Data.Bits ( Bits(xor) )
+
+--import 
 --------------------------------------------------------------------------------
 -- This file is your complete submission for the first coursework of CS141.
 -- 
@@ -44,9 +47,11 @@ isValid word = (normalise word) `elem`  guessList
 --
 -- [JUSTIFY]
 parseCommand :: String -> Command
-parseCommand "give up" = GiveUp
-parseCommand "Letters" = ShowLetters -- 
-parseCommand command = Guess $ normalise command
+parseCommand str = case normalise str of
+    "GIVEUP"    -> GiveUp
+    "LETTERS"   -> ShowLetters
+    _           -> Guess str
+
 
 
 
@@ -61,8 +66,9 @@ parseCommand command = Guess $ normalise command
 exactMatches :: String -> String -> [ExactMatch]
 exactMatches [] [] = []
 exactMatches (x:xs) (y:ys)
-    | x == y = IsExact x : exactMatches xs ys
+    | x == y    = IsExact    x : exactMatches xs ys
     | otherwise = IsNotExact x : exactMatches xs ys
+
 exactMatches _ _ = []
 
 
@@ -75,8 +81,8 @@ exactMatches _ _ = []
 removeExacts :: [ExactMatch] -> String -> String
 removeExacts [] [] = []
 removeExacts (x:xs) (y:ys)
-    | x == IsExact y = removeExacts xs ys
-    | otherwise = y : removeExacts xs ys
+    | x == IsExact  y = removeExacts xs ys
+    | otherwise =   y : removeExacts xs ys
 removeExacts _ _ = []
 
 
@@ -177,8 +183,7 @@ eliminate guess matches = filter (eliminateOne guess matches)
 --
 -- [JUSTIFY]
 eliminateAll :: [(String, [Match])] -> [String]
-eliminateAll = error "Not implemented"
-
+eliminateAll = foldr (uncurry eliminate) guessList
 
 --------------------------------------------------------------------------------
 -- | 10. Using the above functions, write a function which produces a next guess 
@@ -187,3 +192,15 @@ eliminateAll = error "Not implemented"
 -- [JUSTIFY]
 nextGuess :: [(String, [Match])] -> String
 nextGuess = error "Not implemented"
+
+-- mcts
+-- creating a hashing function for each set of words
+-- 
+
+-- Taken from https://stackoverflow.com/questions/9262879/create-a-unique-integer-for-each-string
+hash :: String -> Int
+hash x = foldl (\h c -> h * 33 + fromEnum c) 0 x 
+
+
+hashList :: [String] -> Int
+hashList (x:xs) = hash x `xor` hashList xs 
