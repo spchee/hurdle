@@ -6,9 +6,11 @@ import Hurdle.Command
 import Hurdle.Match
 import Data.Char
 import Hurdle.Words ( guessList, answerList, reducedGuessList )
+import Text.ParserCombinators.ReadP (count)
+import Data.Ord (Down(Down))
+import Data.List (sortBy)
 
-import Data.Bits ( Bits(xor) )
-import Data.Foldable (Foldable(foldl'))
+
 
 --import 
 --------------------------------------------------------------------------------
@@ -181,16 +183,16 @@ eliminate guess matches = filter (eliminateOne guess matches)
 --
 -- [JUSTIFY]
 eliminateAll :: [(String, [Match])] -> [String]
-eliminateAll = foldr (uncurry eliminate) reducedGuessList 
+eliminateAll = foldr (uncurry eliminate) guessList 
 
 --------------------------------------------------------------------------------
 -- | 10. Using the above functions, write a function which produces a next guess 
 -- based on the history of the game so far.
 --
 -- [JUSTIFY]
-nextGuess :: [(String, [Match])] -> String
-nextGuess [] = "Salet"
-nextGuess pastGuesses = snd $ maxTuple $ possibleGuesses reducedGuessList  possibleMatches (eliminateAll pastGuesses)
+--nextGuess :: [(String, [Match])] -> String
+--nextGuess [] = "SALET"
+----nextGuess pastGuesses = snd $ maxTuple $ possibleGuesses reducedGuessList  possibleMatches (eliminateAll pastGuesses)
 
     
 
@@ -208,16 +210,33 @@ getMaxMatches :: String -> [[Match]] -> [String] -> Int
 getMaxMatches guess matches answers = foldr (max . length . eliminate') 0 matches
     where eliminate' matches = eliminate guess matches answers
 
-getMaxMatches' :: String -> [[Match]] -> [String] -> Int
-getMaxMatches' guess matches answers = 
+
+
 
 possibleGuesses :: [String] -> [[Match]] -> [String] -> [(Int, String)]
 possibleGuesses guesses matches answers = map getMaxMatches' guesses
     where getMaxMatches' guess = (getMaxMatches guess matches answers, guess)
+
+-- if number of elements in current is smaller than first, then replace first with current
+possibleGuesses' :: [String] -> [[Match]] -> [String] -> (Int, String)
+possibleGuesses' guesses matches answers = foldr (\x y -> if (fst x) < (fst y) then x else y) (0, "") (possibleGuesses guesses matches answers)
 
 -- find max of list of tuples (Int, String)
 maxTuple :: [(Int, String)] -> (Int, String)
 maxTuple [] = error "empty list"
 maxTuple (x:xs) = foldr (\(a, b) (c, d) -> if a > c then (a, b) else (c, d)) x xs
 
+countLetter :: Char -> String -> Int
+countLetter c = length . filter (==c) 
 
+countLettersInList  :: Char -> [String] -> Int 
+countLettersInList _ [] = 0
+countLettersInList c (str:strings) = countLetter c str + countLettersInList c strings 
+
+countAllLettersInList :: [String] -> [(Int,Char)]
+countAllLettersInList l = [(countLettersInList x l,x) | x <- ['A'..'Z']]
+
+-- find highest 5 letters
+highestFive :: [(Int, Char)] -> [Char]
+highestFive [] = []
+highestFive l = map (snd) $ take 5 $ sortBy (\(a,_) (b,_) -> compare b a) l
