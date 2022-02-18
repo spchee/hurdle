@@ -239,4 +239,12 @@ countAllLettersInList l = [(countLettersInList x l,x) | x <- ['A'..'Z']]
 -- find highest 5 letters
 highestFive :: [(Int, Char)] -> [Char]
 highestFive [] = []
-highestFive l = map (snd) $ take 5 $ sortBy (\(a,_) (b,_) -> compare b a) l
+highestFive list = map (snd) $ take 5 $ sortBy (\(a,_) (b,_) -> compare b a) list
+
+elimnateFirstChar :: String -> [String] -> [(Int, String)]
+elimnateFirstChar _ [] = []
+elimnateFirstChar (char:chars) (str:xs) 
+    | char `elem` str = elimnateFirstChar (char:chars) (drop 1 str:xs) 
+    | otherwise = 
+
+
