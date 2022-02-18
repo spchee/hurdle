@@ -5,9 +5,10 @@ module Hurdle where
 import Hurdle.Command
 import Hurdle.Match
 import Data.Char
-import Hurdle.Words ( guessList )
+import Hurdle.Words ( guessList, answerList, reducedGuessList )
 
 import Data.Bits ( Bits(xor) )
+import Data.Foldable (Foldable(foldl'))
 
 --import 
 --------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ parseCommand :: String -> Command
 parseCommand str = case normalise str of
     "GIVEUP"    -> GiveUp
     "LETTERS"   -> ShowLetters
-    _           -> Guess str
+    _           -> Guess $ normalise str
 
 
 
@@ -64,7 +65,6 @@ parseCommand str = case normalise str of
 --
 -- [JUSTIFY]
 exactMatches :: String -> String -> [ExactMatch]
-exactMatches [] [] = []
 exactMatches (x:xs) (y:ys)
     | x == y    = IsExact    x : exactMatches xs ys
     | otherwise = IsNotExact x : exactMatches xs ys
@@ -79,7 +79,6 @@ exactMatches _ _ = []
 --
 -- [JUSTIFY]
 removeExacts :: [ExactMatch] -> String -> String
-removeExacts [] [] = []
 removeExacts (x:xs) (y:ys)
     | x == IsExact  y = removeExacts xs ys
     | otherwise =   y : removeExacts xs ys
@@ -100,7 +99,6 @@ removeChar c (x:xs)
 removeChar _ _ = error "some error"
 
 getMatches :: [ExactMatch] -> [Char] -> [Match]
-getMatches [] [] = []
 getMatches (IsExact x:xs) (y:ys) = Exact : getMatches xs (y:ys)
 getMatches (IsNotExact x:xs) (y:ys)
     | x `elem` (y:ys) = Partial : getMatches xs (removeChar x (y:ys))
@@ -183,7 +181,7 @@ eliminate guess matches = filter (eliminateOne guess matches)
 --
 -- [JUSTIFY]
 eliminateAll :: [(String, [Match])] -> [String]
-eliminateAll = foldr (uncurry eliminate) guessList
+eliminateAll = foldr (uncurry eliminate) reducedGuessList 
 
 --------------------------------------------------------------------------------
 -- | 10. Using the above functions, write a function which produces a next guess 
@@ -191,16 +189,35 @@ eliminateAll = foldr (uncurry eliminate) guessList
 --
 -- [JUSTIFY]
 nextGuess :: [(String, [Match])] -> String
-nextGuess = error "Not implemented"
+nextGuess [] = "Salet"
+nextGuess pastGuesses = snd $ maxTuple $ possibleGuesses reducedGuessList  possibleMatches (eliminateAll pastGuesses)
 
--- mcts
+    
+
+
+
+
 -- creating a hashing function for each set of words
--- 
+possibleMatches :: [[Match]]
+possibleMatches = [[Partial, None, None, None, None], [None, Partial, None, None, None], [None, None, Partial, None, None], [None, None, None, Partial, None], [None, None, None, None, Partial], [None, None, None, None, None]]
 
--- Taken from https://stackoverflow.com/questions/9262879/create-a-unique-integer-for-each-string
-hash :: String -> Int
-hash x = foldl (\h c -> h * 33 + fromEnum c) 0 x 
+--      guess -> Matches -> remainingAnswers -> maxNumberOfWordsWhichMatch
+
+ 
+getMaxMatches :: String -> [[Match]] -> [String] -> Int
+getMaxMatches guess matches answers = foldr (max . length . eliminate') 0 matches
+    where eliminate' matches = eliminate guess matches answers
+
+getMaxMatches' :: String -> [[Match]] -> [String] -> Int
+getMaxMatches' guess matches answers = 
+
+possibleGuesses :: [String] -> [[Match]] -> [String] -> [(Int, String)]
+possibleGuesses guesses matches answers = map getMaxMatches' guesses
+    where getMaxMatches' guess = (getMaxMatches guess matches answers, guess)
+
+-- find max of list of tuples (Int, String)
+maxTuple :: [(Int, String)] -> (Int, String)
+maxTuple [] = error "empty list"
+maxTuple (x:xs) = foldr (\(a, b) (c, d) -> if a > c then (a, b) else (c, d)) x xs
 
 
-hashList :: [String] -> Int
-hashList (x:xs) = hash x `xor` hashList xs 

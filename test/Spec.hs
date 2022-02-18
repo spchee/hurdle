@@ -230,7 +230,7 @@ testNextGuess    = testGroup "Q10: nextGuess"
   [
     testCase "Successfully solves Hurdle"
       $ do
-        let numTries = 300
+        let numTries = 1
         gs <- replicateM numTries $ do
           ans <- normalise . (answerList !!) <$> randomRIO (0, length answerList - 1)
           let x rs = let g = nextGuess rs

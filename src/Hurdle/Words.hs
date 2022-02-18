@@ -22,3 +22,21 @@ answerList = lines $(embedStringFile "assets/answers")
 -- Note that the two files are disjoint, so we need to add the answer list to the guess list to cover all words in the system.
 guessList :: [String]
 guessList = sort $ lines $(embedStringFile "assets/allowed-guesses") ++ answerList
+
+reducedGuessList :: [String]
+reducedGuessList = sort $ lines $(embedStringFile "assets/reduced-guesses") ++ answerList
+
+genReducedGuessList :: [String] -> [String]
+genReducedGuessList [] = []
+genReducedGuessList (x:xs)
+    | length xs < 6 = x : answerList
+    | otherwise = x : genReducedGuessList (drop 6 xs)
+
+-- write list of strings to a filepath using writeFile
+writeListToFile :: [String] -> FilePath -> IO ()
+writeListToFile [] _ = return ()
+writeListToFile (x:xs) fp = do
+    appendFile fp (x ++ "\n")
+    writeListToFile xs fp
+
+
