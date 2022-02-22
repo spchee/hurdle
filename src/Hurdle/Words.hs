@@ -26,6 +26,7 @@ guessList = sort $ lines $(embedStringFile "assets/allowed-guesses") ++ answerLi
 reducedGuessList :: [String]
 reducedGuessList = sort $ lines $(embedStringFile "assets/reduced-guesses") ++ answerList
 
+-- Tried to generate a reduced guessList for testing so it wouldn't take as long to run.
 genReducedGuessList :: [String] -> [String]
 genReducedGuessList [] = []
 genReducedGuessList (x:xs)
